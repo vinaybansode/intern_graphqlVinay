@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import type { AuthContext } from "@/lib/auth/context";
 import { StatCard, Section, Badge, Empty } from "@/components/ui";
 import { dayRange, fmtDate } from "@/lib/dates";
+import { InteractiveStudentPanel } from "./InteractiveStudentPanel";
 import Link from "next/link";
 
 export async function HeadmasterDashboard({ ctx }: { ctx: AuthContext }) {
@@ -17,6 +18,7 @@ export async function HeadmasterDashboard({ ctx }: { ctx: AuthContext }) {
     events,
     announcements,
     recentAudit,
+    recentStudents,
   ] = await Promise.all([
     db.student.count({ where: { schoolId: ctx.schoolId, archived: false } }),
     db.teacher.count({ where: { schoolId: ctx.schoolId, isActive: true } }),
@@ -34,10 +36,23 @@ export async function HeadmasterDashboard({ ctx }: { ctx: AuthContext }) {
     }),
     db.announcement.findMany({ where: { schoolId: ctx.schoolId }, orderBy: { publishAt: "desc" }, take: 5 }),
     db.auditLog.findMany({ where: { schoolId: ctx.schoolId }, orderBy: { createdAt: "desc" }, take: 6 }),
+    db.student.findMany({
+      where: { schoolId: ctx.schoolId, archived: false },
+      include: {
+        enrollments: {
+          where: { status: "ACTIVE" },
+          include: { section: { include: { grade: true } } },
+          take: 1,
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+    }),
   ]);
 
   return (
     <div className="space-y-6">
+      {/* Dynamic Summary Cards */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard label="Students" value={students} />
         <StatCard label="Teachers" value={teachers} />
@@ -45,7 +60,51 @@ export async function HeadmasterDashboard({ ctx }: { ctx: AuthContext }) {
         <StatCard label="Subjects" value={subjects} />
       </div>
 
+      {/* Interactive GraphQL and Student Quick Controls */}
+      <InteractiveStudentPanel />
+
       <div className="grid gap-6 lg:grid-cols-2">
+        {/* Recent Admissions Section */}
+        <Section
+          title="Recent Admissions"
+          action={<Link href="/students" className="text-xs text-brand-600">All students →</Link>}
+        >
+          {recentStudents.length === 0 ? (
+            <Empty>No students registered yet.</Empty>
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {recentStudents.map((s) => {
+                const enr = s.enrollments[0];
+                return (
+                  <li key={s.id} className="flex items-center justify-between py-2.5 text-sm">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700">
+                        {s.firstName[0]}{s.lastName[0]}
+                      </div>
+                      <div>
+                        <div className="font-medium text-slate-800">{s.firstName} {s.lastName}</div>
+                        <div className="font-mono text-xs text-slate-400">{s.admissionNo}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {enr ? (
+                        <Badge color="blue">
+                          {enr.section.grade.name.replace("Class ", "")}-{enr.section.name}
+                        </Badge>
+                      ) : (
+                        <Badge color="slate">New</Badge>
+                      )}
+                      <Link href={`/students/${s.id}`} className="text-xs text-brand-600 hover:underline">
+                        View
+                      </Link>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Section>
+
         <Section title="Absent today" action={<Link href="/attendance" className="text-xs text-brand-600">View attendance</Link>}>
           {absentToday.length === 0 ? (
             <Empty>No student absences recorded today.</Empty>
