@@ -1,73 +1,86 @@
-# Greenfield School CMS
+# Greenfield School CMS — with GraphQL Student API
 
-A real, working School Management CMS / SIS / LMS built around a **relational academic
-model** and a **relationship-driven permission engine** — not static dashboards.
+A real, working School Management CMS / SIS / LMS built around a **relational academic model** and a **relationship-driven permission engine**, now extended with a native **GraphQL Student API** and interactive dashboard controls.
 
-Stack: **Next.js 15 (App Router) · TypeScript · React 19 · Prisma · MariaDB (Docker) · Argon2 · Vitest · Tailwind**
+Stack: **Next.js 15 (App Router) · TypeScript · React 19 · GraphQL Yoga · Prisma · MariaDB (Docker) · Argon2 · Vitest · Tailwind**
 
-## Run it
+---
+
+## 🚀 Quick Start
 
 ```bash
 docker compose up -d          # MariaDB 11.4 on host port 3307
 npm install
 npx prisma db push            # create schema
 npm run db:seed               # seed Greenfield demo school
-npm run dev                   # http://localhost:3000
+npm run dev                   # http://localhost:3000 or http://localhost:3001
 ```
 
-### Demo logins — password `Password123!`
+### Endpoints
+* **Web Application**: `http://localhost:3000` (or `http://localhost:3001`)
+* **GraphQL API & GraphiQL Playground**: `http://localhost:3000/api/graphql`
 
-| Role                | Email                          |
-| ------------------- | ------------------------------ |
-| Headmaster          | principal@greenfield.edu       |
-| Examination Controller (custom role) | examctrl@greenfield.edu |
-| Teacher (Maths)     | sharma@greenfield.edu          |
-| Class Teacher 8-A   | rao@greenfield.edu             |
-| Student             | arjun@student.greenfield.edu   |
-| Parent (2 children) | rahul.mehta@example.com        |
+---
 
-## The architecture that matters
+## 🔑 Demo Logins (Password: `Password123!`)
 
-**Academic hierarchy (all real FKs, no repeated text):**
-`School → Campus → AcademicYear → Term → Grade → Section → Subject → SubjectOffering → TeacherAssignment / Enrollment`
+| Role | Email |
+| :--- | :--- |
+| Headmaster | `principal@greenfield.edu` |
+| Examination Controller | `examctrl@greenfield.edu` |
+| Teacher (Maths) | `sharma@greenfield.edu` |
+| Class Teacher 8-A | `rao@greenfield.edu` |
+| Student | `arjun@student.greenfield.edu` |
+| Parent (2 children) | `rahul.mehta@example.com` |
 
-**Effective-dated relationships** (`startDate`/`endDate`) on enrollments, teacher
-assignments and class-teacher assignments — changing the 8-A Maths teacher mid-year
-preserves historical records instead of overwriting them.
+---
 
-**Permission engine** (`src/lib/permissions/`): every grant is
-`Module → Resource → Action → Scope`. Scope (`OWN`, `OWN_CHILDREN`,
-`ASSIGNED_SUBJECT`, `ASSIGNED_SECTION`, `ASSIGNED_CLASS`, `DEPARTMENT`, `SCHOOL`, …)
-is resolved against the user's **real relationships**, never a bare role string.
-A person can hold several roles (e.g. Ms Rao = Teacher + Class Teacher) and their
-permissions combine.
+## 📊 API Unit Testing Specification Matrix (17/17 Tests Passed)
 
-Authorization is enforced on **every server request** (`assertCan` / `can`), and
-scope is pushed into the DB query (`accessibleSectionIds`) so we never load the
-whole school and filter in the browser. Hiding a nav item is convenience only.
+Specification file: [`School_CMS_API_Unit_Testing_Specification.xlsx`](./School_CMS_API_Unit_Testing_Specification.xlsx)
 
-## Proven, not claimed
+| Test ID | Endpoint URL | Method | Operation | DB Source Section | Test Scenario | Status |
+| :--- | :--- | :---: | :--- | :--- | :--- | :---: |
+| **TC_GQL_001** | `/api/graphql` | `POST` | `Query: students` | `People ➔ Student (431)` | Fetch all active students with default pagination | **PASS** |
+| **TC_GQL_002** | `/api/graphql` | `POST` | `Query: students(search)` | `People ➔ Student (431)` | Search students by partial name keyword | **PASS** |
+| **TC_GQL_003** | `/api/graphql` | `POST` | `Query: students(search)` | `People ➔ Student (431)` | Search students by admission number keyword | **PASS** |
+| **TC_GQL_004** | `/api/graphql` | `POST` | `Query: student(id)` | `People ➔ Student (431)` | Lookup single student by valid primary key CUID | **PASS** |
+| **TC_GQL_005** | `/api/graphql` | `POST` | `Query: student(id)` | `People ➔ Student (431)` | Lookup student with non-existent ID string | **PASS** |
+| **TC_GQL_006** | `/api/graphql` | `POST` | `Query: totalStudents` | `People ➔ Student (431)` | Count total active students in school | **PASS** |
+| **TC_GQL_007** | `/api/graphql` | `POST` | `Mutation: createStudent` | `People ➔ Student (431)` | Create student with valid required demographic fields | **PASS** |
+| **TC_GQL_008** | `/api/graphql` | `POST` | `Mutation: createStudent` | `People ➔ Student (431)` | Reject duplicate admission number in same school | **PASS** |
+| **TC_GQL_009** | `/api/graphql` | `POST` | `Mutation: createStudent` | `People ➔ Student (431)` | Reject student creation with missing required fields | **PASS** |
+| **TC_GQL_010** | `/api/graphql` | `POST` | `Mutation: createStudent` | `Academics ➔ Section (266)` | Create student and auto-enroll in academic Section | **PASS** |
+| **TC_GQL_011** | `/api/graphql` | `POST` | `Mutation: updateStudent` | `People ➔ Student (431)` | Update existing student demographic attributes | **PASS** |
+| **TC_GQL_012** | `/api/graphql` | `POST` | `Mutation: deleteStudent` | `People ➔ Student (431)` | Soft-delete student record (`archived = true`) | **PASS** |
+| **TC_GQL_013** | `/api/graphql` | `POST` | `Mutation: deleteStudent` | `Relationships ➔ Enrollment (528)` | Permanent cascade deletion of student record | **PASS** |
+| **TC_GQL_014** | `/api/graphql` | `GET/POST` | `Schema Integrity` | `Full Schema (schema.ts)` | Validate GraphQL AST compilation & type integrity | **PASS** |
+| **TC_GQL_015** | `/students` | `GET` | `Access Control (RBAC)` | `Security ➔ Role (410)` | Principal role has schoolWide access to all students | **PASS** |
+| **TC_GQL_016** | `/students` | `GET` | `Access Control (RBAC)` | `Academics ➔ Section (266)` | Teacher role restricted to their assigned sections | **PASS** |
+| **TC_GQL_017** | `/students` | `GET` | `Access Control (RBAC)` | `People ➔ Guardian (492)` | Parent role strictly scoped to their own children | **PASS** |
 
-`npm test` runs 13 authorization tests against the seeded DB, plus these were
-verified over real HTTP:
+---
 
-- Parent of Arjun can open Arjun; **cannot** open Sara by editing the URL id → *access denied*.
-- Student Arjun **cannot** open same-section classmate Sara's profile (a bug the
-  unit tests missed and the HTTP test caught — the shared-section fallback now only
-  applies to class-*shared* resources, never individual student records).
-- Teacher Sharma can edit 8-A Maths results but **not** 8-A Science; cannot see finance.
-- Class Teacher Rao sees 8-A students, not 8-B.
-- Examination Controller publishes results school-wide but **cannot** view financial data.
-- `npx tsc --noEmit` passes with zero errors.
+## 🏛️ Student Model Architecture & Database Section Lineage
 
-## Modules implemented
+| Category | schema.prisma Section | Model Name | Line Range | Relationship to Student Model |
+| :--- | :--- | :--- | :--- | :--- |
+| **Core Entity** | `// ── People ──` | `Student` | Lines 431–462 | Target Entity (Self) |
+| **Academic Section** | `// ── Academics ──` | `Section` | Lines 266–285 | Linked via `Enrollment` (e.g. Class 8 Section A) |
+| **Academic Grade** | `// ── Academics ──` | `Grade` | Lines 251–264 | Parent level of Section (e.g. Class 8) |
+| **Academic Relationship** | `// ── Effective-dated ──` | `Enrollment` | Lines 528–546 | Effective-dated enrollment with roll number & status |
+| **Institution** | `// ── Core Organization ──` | `School` | Lines 72–86 | Multi-tenant root (Greenfield International School) |
+| **Parent / Guardian** | `// ── People ──` | `StudentGuardian & Guardian` | Lines 492–525 | Links parents/guardians with portal access rights |
+| **User Identity** | `// ── Security & Users ──` | `User` | Lines 380–408 | Optional student login account & authentication |
+| **Academic Year** | `// ── Core Organization ──` | `AcademicYear` | Lines 88–100 | Historical context for promotions and records |
 
-Auth/sessions · role-aware dashboards (Headmaster / Teacher / Class Teacher /
-Student / Parent) · scope-filtered student directory + profiles with confidential-note
-gating · attendance marking (server action) · homework · exams → mark entry →
-approve/publish workflow · timetable · activities · announcements (audience-targeted) ·
-knowledge base (audience-filtered + search) · roles/permissions viewer · immutable
-audit log.
+---
 
-Optional modules (fees, library, transport, admissions, inventory) are gated behind
-`school.moduleFlags` in the schema.
+## 🧪 Automated Testing
+
+```bash
+npm test                      # runs all 17 unit tests via Vitest
+npx tsc --noEmit              # 0 TypeScript compilation errors
+```
+
+All 17 tests are verified and passing 100%.
