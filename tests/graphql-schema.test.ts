@@ -25,11 +25,14 @@ describe("GraphQL Schema Validation", () => {
     expect(queryFields?.totalStudents).toBeDefined();
   });
 
-  it("should contain expected Mutations (createStudent, updateStudent, deleteStudent)", () => {
+  it("should contain expected Mutations (createStudent, updateStudent, deleteStudent, resetPassword)", () => {
     const schema = buildSchema(typeDefs);
     const mutationFields = schema.getMutationType()?.getFields();
     expect(mutationFields?.createStudent).toBeDefined();
     expect(mutationFields?.updateStudent).toBeDefined();
     expect(mutationFields?.deleteStudent).toBeDefined();
+    expect(mutationFields?.resetPassword).toBeDefined();
+    expect(schema.getType("ResetPasswordInput")).toBeDefined();
+    expect(schema.getType("ResetPasswordPayload")).toBeDefined();
   });
 });

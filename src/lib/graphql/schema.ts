@@ -97,5 +97,22 @@ export const typeDefs = /* GraphQL */ `
     Delete a student (soft-delete by default, or permanent delete)
     """
     deleteStudent(id: ID!, permanent: Boolean): Boolean!
+
+    """
+    Reset password for Admin, Student, Principal, or other school accounts
+    """
+    resetPassword(input: ResetPasswordInput!): ResetPasswordPayload!
+  }
+
+  input ResetPasswordInput {
+    email: String!
+    newPassword: String
+  }
+
+  type ResetPasswordPayload {
+    success: Boolean!
+    message: String!
+    email: String!
+    role: String
   }
 `;

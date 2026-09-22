@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import type { Gender } from "@prisma/client";
+import { resetUserPassword } from "@/lib/auth/passwordReset";
 
 export const resolvers = {
   Student: {
@@ -276,6 +277,19 @@ export const resolvers = {
         });
       }
       return true;
+    },
+
+    resetPassword: async (
+      _: unknown,
+      { input }: { input: { email: string; newPassword?: string } }
+    ) => {
+      const result = await resetUserPassword(input);
+      return {
+        success: result.success,
+        message: result.message,
+        email: result.email,
+        role: result.role,
+      };
     },
   },
 };

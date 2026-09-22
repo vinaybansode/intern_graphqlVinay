@@ -18,7 +18,41 @@ npm run dev                   # http://localhost:3000 or http://localhost:3001
 
 ### Endpoints
 * **Web Application**: `http://localhost:3000` (or `http://localhost:3001`)
+* **Password Reset REST API**: `http://localhost:3000/api/auth/reset-password` (POST / GET)
 * **GraphQL API & GraphiQL Playground**: `http://localhost:3000/api/graphql`
+
+---
+
+## 🔒 Password Reset API (`/api/auth/reset-password`)
+
+Provides secure password reset capabilities for **Admin**, **Principal**, and **Student** accounts with Argon2id hashing and immediate session revocation:
+
+```bash
+# Reset password by Email (Admin, Principal, or Student)
+curl -X POST http://localhost:3000/api/auth/reset-password \
+  -H "Content-Type: application/json" \
+  -d '{"email": "principal@greenfield.edu", "newPassword": "PrincipalPass2026!"}'
+
+# Batch Reset by Role Target (admin | principal | student | all)
+curl -X POST http://localhost:3000/api/auth/reset-password \
+  -H "Content-Type: application/json" \
+  -d '{"target": "student", "newPassword": "BulkStudentPass2026!"}'
+```
+
+Or via GraphQL mutation at `/api/graphql`:
+```graphql
+mutation ResetStudentPassword {
+  resetPassword(input: {
+    email: "arjun@student.greenfield.edu"
+    newPassword: "StudentNewPass2026!"
+  }) {
+    success
+    message
+    email
+    role
+  }
+}
+```
 
 ---
 
@@ -26,7 +60,7 @@ npm run dev                   # http://localhost:3000 or http://localhost:3001
 
 | Role | Email |
 | :--- | :--- |
-| Headmaster | `principal@greenfield.edu` |
+| Headmaster / Admin | `principal@greenfield.edu` (or `admin@greenfield.edu`) |
 | Examination Controller | `examctrl@greenfield.edu` |
 | Teacher (Maths) | `sharma@greenfield.edu` |
 | Class Teacher 8-A | `rao@greenfield.edu` |
@@ -35,7 +69,7 @@ npm run dev                   # http://localhost:3000 or http://localhost:3001
 
 ---
 
-## 📊 API Unit Testing Specification Matrix (17/17 Tests Passed)
+## 📊 API Unit Testing Specification Matrix (30 Test Cases)
 
 Specification file: [`School_CMS_API_Unit_Testing_Specification.xlsx`](./School_CMS_API_Unit_Testing_Specification.xlsx)
 
