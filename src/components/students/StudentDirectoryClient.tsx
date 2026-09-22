@@ -177,6 +177,51 @@ export function StudentDirectoryClient({
 
   return (
     <div className="space-y-4">
+      {/* Quick KPI Stats Header */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="card p-3 flex items-center gap-3 border-l-4 border-l-blue-500">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 text-lg shadow-sm">
+            👥
+          </div>
+          <div>
+            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Enrolled</div>
+            <div className="text-xl font-bold text-slate-900">{students.length}</div>
+          </div>
+        </div>
+
+        <div className="card p-3 flex items-center gap-3 border-l-4 border-l-indigo-500">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 text-lg shadow-sm">
+            🏫
+          </div>
+          <div>
+            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Active Sections</div>
+            <div className="text-xl font-bold text-slate-900">{sections.length}</div>
+          </div>
+        </div>
+
+        <div className="card p-3 flex items-center gap-3 border-l-4 border-l-emerald-500">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 text-lg shadow-sm">
+            🚻
+          </div>
+          <div>
+            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Gender Split</div>
+            <div className="text-xs font-bold text-slate-800">
+              {students.filter((s) => s.gender === "MALE").length} Boys · {students.filter((s) => s.gender === "FEMALE").length} Girls
+            </div>
+          </div>
+        </div>
+
+        <div className="card p-3 flex items-center gap-3 border-l-4 border-l-brand-500">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 text-lg shadow-sm">
+            ⚡
+          </div>
+          <div>
+            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Filtered Matches</div>
+            <div className="text-xl font-bold text-brand-600">{filteredStudents.length}</div>
+          </div>
+        </div>
+      </div>
+
       {/* Dynamic Controls & Filter Bar */}
       <div className="card p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
