@@ -20,6 +20,7 @@ const ITEMS: NavItem[] = [
   { href: "/knowledge", label: "Knowledge Base", module: "knowledge", resource: "articles" },
   { href: "/roles", label: "Users & Roles", module: "admin", resource: "roles" },
   { href: "/audit", label: "Audit Log", module: "admin", resource: "audit" },
+  { href: "/copilot", label: "🤖 AI Copilot", module: "*", resource: "*" },
   { href: "/api/graphql", label: "GraphQL API ↗", module: "admin", resource: "audit" },
 ];
 
